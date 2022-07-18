@@ -16,8 +16,8 @@ func init() {
 	netClient = &http.Client{Transport: tr}
 }
 
-func testFetch(val chan bool) {
-	res, err := netClient.Get("http://localhost:9090")
+func testFetch(val chan bool, url string) {
+	res, err := netClient.Get(url)
 	if err != nil {
 		log.Println(err)
 	}
@@ -36,11 +36,12 @@ func testFetch(val chan bool) {
 }
 
 func main() {
-	testCount := 500
+	testCount := 600
+	url := "http://localhost:9090/"
 	val := make(chan bool)
 
 	for i := 0; i < testCount; i++ {
-		go testFetch(val)
+		go testFetch(val, url)
 	}
 
 	result := []bool{}

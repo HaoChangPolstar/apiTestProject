@@ -20,24 +20,28 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello astaxie!") //這個寫入到 w 的是輸出到客戶端的
 }
 
-func setRlimitNOFile(nofile uint64) error {
-	if nofile == 0 {
-		return nil
+func SetRLimit() {
+	var rLimit syscall.Rlimit
+	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	if err != nil {
+		fmt.Println("Error Getting Rlimit ", err)
 	}
-	var lim syscall.Rlimit
-	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &lim); err != nil {
-		return err
+	fmt.Println(rLimit)
+	rLimit.Max = 999999
+	rLimit.Cur = 999999
+	err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	if err != nil {
+		fmt.Println("Error Setting Rlimit ", err)
 	}
-	if nofile <= lim.Cur {
-		return nil
+	err = syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	if err != nil {
+		fmt.Println("Error Getting Rlimit ", err)
 	}
-	lim.Cur = nofile
-	lim.Max = nofile
-	return syscall.Setrlimit(syscall.RLIMIT_NOFILE, &lim)
+	fmt.Println("Rlimit Final", rLimit)
 }
 
 func main() {
-	setRlimitNOFile(100000)
+	SetRLimit()
 	http.HandleFunc("/", sayhelloName)
 	log.Println("Listen at http://localhost:9090/")
 	err := http.ListenAndServe(":9090", nil) //設定監聽的埠
